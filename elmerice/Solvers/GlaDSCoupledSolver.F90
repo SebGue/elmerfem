@@ -2825,7 +2825,7 @@ RECURSIVE SUBROUTINE GroundedMelt( Model,Solver,Timestep,TransientSimulation )
   REAL(KIND=dp)               :: rho_fw ! density of fresh water
   REAL(KIND=dp),PARAMETER     :: threshold = 0.001_dp ! threshold friction melt rate for including GHF in melt calc
   REAL(KIND=dp), POINTER      :: WtVals(:), HeatVals(:), MeltVals(:), GHFVals(:), Ceffvals(:), UbVals(:)
-  REAL(KIND=dp)               :: LatHeat, GHFscaleFactor, Ub(1)
+  REAL(KIND=dp)               :: LatHeat, GHFscaleFactor, Ub
   INTEGER, POINTER            :: WtPerm(:), HeatPerm(:), MeltPerm(:), GHFPerm(:), Ceffperm(:), UbPerm(:)
   INTEGER                     :: nn
   
@@ -2874,10 +2874,10 @@ RECURSIVE SUBROUTINE GroundedMelt( Model,Solver,Timestep,TransientSimulation )
     UbVals     => UbVar%Values 
     UbPerm     => UbVar%Perm
 
-    IF (UbVar % DOFS .NE. 2) THEN
-      CALL Fatal(MyName, 'Expecting Ub variable to be 2D')
-    END IF
-    !    Material => GetMaterial() ! get sliding velocity from material
+!    IF (UbVar % DOFS .NE. 2) THEN
+!      CALL Fatal(MyName, 'Expecting Ub variable to be 2D')
+!    END IF
+!    !    Material => GetMaterial() ! get sliding velocity from material
 
   CASE DEFAULT
     CALL Fatal(MyName, 'MeltMode not recognised')
@@ -2910,9 +2910,17 @@ RECURSIVE SUBROUTINE GroundedMelt( Model,Solver,Timestep,TransientSimulation )
       CASE ("heat")      
         MeltVals(MeltPerm(nn)) = ABS( 1.0e6 * HeatVals(HeatPerm(nn)) ) / ( WtVals(WtPerm(nn)) * rho_fw * LatHeat )
       CASE ("friction")
-        Ub = (UbVals(2*(UbPerm(nn)-1)+1)**2 + UbVals(2*(UbPerm(nn)-1)+2)**2)**0.5
+!        Ub = (UbVals(2*(UbPerm(nn)-1)+1)**2 + UbVals(2*(UbPerm(nn)-1)+2)**2)**0.5
 !        Ub(1:1) = ListGetReal( Material, 'Sliding Velocity', 1, [nn], Found, UnfoundFatal = .TRUE. )
-        MeltVals(MeltPerm(nn)) = (Ub(1)**2 * CeffVals(CeffPerm(nn)) ) / ( rho_fw * LatHeat )
+         IF (UbVar % DOFS .EQ. 2) THEN
+            Ub = (UbVals(2*(UbPerm(nn)-1)+1)**2 + UbVals(2*(UbPerm(nn)-1)+2)**2)**0.5
+         ELSE IF (UbVar % DOFS .EQ. 3) THEN
+            Ub = (UbVals(3*(UbPerm(nn)-1)+1)**2 + UbVals(3*(UbPerm(nn)-1)+2)**2 + UbVals(3*(UbPerm(nn)-1)+3)**2)**0.5
+         ELSE
+            CALL Fatal(MyName, 'Expecting Ub variable to be 2D or 3D')
+         END IF
+         
+         MeltVals(MeltPerm(nn)) = (Ub**2 * CeffVals(CeffPerm(nn)) ) / ( rho_fw * LatHeat )
       END SELECT
       
       IF (UseGHF) THEN
