@@ -3196,7 +3196,9 @@
                  StepControl = -1
                END IF
 
-               WRITE(*,'(a,3e20.12)') 'Adaptive(cum,ddt,err): ', cumtime, ddt, maxerr
+               WRITE(Message,'(a,3e20.12)') 'Adaptive(cum,ddt,err): ', cumtime, ddt, maxerr
+               CALL Info(Caller,Message,Level=12)
+
              END DO
             sSize(1) = dt
             sTime(1) = s + dt
