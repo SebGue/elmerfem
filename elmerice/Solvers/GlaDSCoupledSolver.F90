@@ -2916,8 +2916,11 @@ RECURSIVE SUBROUTINE GroundedMelt( Model,Solver,Timestep,TransientSimulation )
             Ub = (UbVals(2*(UbPerm(nn)-1)+1)**2 + UbVals(2*(UbPerm(nn)-1)+2)**2)**0.5
          ELSE IF (UbVar % DOFS .EQ. 3) THEN
             Ub = (UbVals(3*(UbPerm(nn)-1)+1)**2 + UbVals(3*(UbPerm(nn)-1)+2)**2 + UbVals(3*(UbPerm(nn)-1)+3)**2)**0.5
+         ELSE IF (UbVar % DOFS .EQ. 4) THEN
+            Ub = (UbVals(4*(UbPerm(nn)-1)+1)**2 + UbVals(4*(UbPerm(nn)-1)+2)**2 + UbVals(4*(UbPerm(nn)-1)+3)**2)**0.5
+           CALL INFO(MyName, 'Sliding velocity is 4D. Ignoring 4th dimension.', level=5 )
          ELSE
-            CALL Fatal(MyName, 'Expecting Ub variable to be 2D or 3D')
+            CALL Fatal(MyName, 'Expecting Ub variable to be 2D or 3D (or 4D flow solution)')
          END IF
          
          MeltVals(MeltPerm(nn)) = (Ub**2 * CeffVals(CeffPerm(nn)) ) / ( rho_fw * LatHeat )
